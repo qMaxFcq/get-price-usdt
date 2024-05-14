@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wg-get-price-usdt
+  labels:
+    app.project: wg-pricing-management
+    app.name: wg-get-price-usdt
+    app.env: production
+    app.version: 1.0.0
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.name: wg-get-price-usdt
+  template:
+    metadata:
+      labels:
+        app.name: wg-get-price-usdt
+        app.project: wg-pricing-management
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kops.k8s.io/instancegroup
+                    operator: In
+                    values:
+                      - nodes-ap-southeast-1a
+      containers:
+        - name: wg-get-price-usdt
+          image: 717581138308.dkr.ecr.ap-southeast-1.amazonaws.com/wg-get-price-usdt:latest
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: wg-get-price-usdt-env-secret
+          resources: 
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "15"]
+      imagePullSecrets:
+        - name: ecr-registry
+      restartPolicy: Always
+status: {}
+
